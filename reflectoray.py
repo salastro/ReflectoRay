@@ -10,6 +10,7 @@ HEAD_RAY = (0, 0)
 TAIL_RAY = (-50, 50)
 ANGLES = range(0, 360, 10)
 ITERATIONS = 100
+EXTENSION_LENGTH = 1000
 
 
 def setup_screen():
@@ -81,7 +82,7 @@ def distance(point, line_start, line_end):
     return distance
 
 
-def reflection(incident_angle, line_start, line_end):
+def reflect_ray(incident_angle, line_start, line_end):
     """
     Calculate the reflection angle based on the incident angle and mirror
     orientation.
@@ -101,6 +102,28 @@ def reflection(incident_angle, line_start, line_end):
     return reflection_angle
 
 
+def extend_ray(ray, extension_length):
+    """
+    Extend the ray to simulate the reflection.
+
+    Args:
+    ray (turtle.Turtle): The turtle object representing the ray.
+    extension_length (int): The length of the extension.
+    """
+    distance = 0
+    angle = ray.heading()
+    ray.setheading(angle-180)
+    while distance <= extension_length:
+        ray.pendown()
+        ray.forward(10)
+        ray.penup()
+        ray.forward(10)
+        distance += 20
+    ray.setheading(angle)
+    ray.forward(distance)
+    ray.pendown()
+
+
 def simulate_rays(rays):
     """
     Simulate the reflection of rays off mirrors.
@@ -108,7 +131,6 @@ def simulate_rays(rays):
     Args:
     rays (list): List of turtle objects representing rays.
     """
-    extension_length = 1000
     for ray in rays:
         for mirror in MIRRORS:
             start, end = mirror
@@ -119,11 +141,9 @@ def simulate_rays(rays):
             in_boundary = (sy < ray.ycor() < ey) or (ex < ray.xcor() < sx)
 
             if intersection <= 1 and in_boundary:
-                reflection_angle = reflection(ray.heading(), start, end)
-                ray.setheading(reflection_angle-180)
-                ray.forward(extension_length)
+                reflection_angle = reflect_ray(ray.heading(), start, end)
                 ray.setheading(reflection_angle)
-                ray.forward(extension_length)
+                extend_ray(ray, EXTENSION_LENGTH)
             ray.forward(1)
 
 
