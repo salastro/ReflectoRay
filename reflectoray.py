@@ -1,17 +1,35 @@
+import argparse
+import json
 import math
 import turtle
 
-# Constants
-MIRRORS = [
-    ((100, -100), (100, 100)),
-    ((100, 100), (-100, 100)),
-]
-RAYS = [
-    {'start': (0, 0), 'color': 'black'},
-    {'start': (-50, 50), 'color': 'red'},
-]
-ANGLES = range(0, 360, 10)
-ITERATIONS = 100
+
+def parse_arguments():
+    """
+    Parse command line arguments.
+
+    Returns:
+    argparse.Namespace: The namespace object containing the parsed arguments.
+    """
+    parser = argparse.ArgumentParser(description="Ray Reflection Simulation")
+    parser.add_argument("initial_conditions",
+                        help="Path to the initial conditions file")
+    return parser.parse_args()
+
+
+def load_initial_conditions(file_path):
+    """
+    Load the initial conditions from a JSON file.
+
+    Args:
+    file_path (str): The path to the JSON file.
+
+    Returns:
+    dict: The dictionary containing the initial conditions.
+    """
+    with open(file_path) as initial_conditions_file:
+        initial_conditions = json.load(initial_conditions_file)
+    return initial_conditions
 
 
 def setup_screen():
@@ -28,11 +46,11 @@ def setup_screen():
     return screen
 
 
-def draw_mirrors():
+def draw_mirrors(mirrors):
     """
     Draw the mirrors on the turtle screen.
     """
-    for mirror in MIRRORS:
+    for mirror in mirrors:
         start, end = mirror
         turtle.penup()
         turtle.goto(start)
@@ -125,7 +143,7 @@ def extend_ray(ray):
     ray.pendown()
 
 
-def simulate_rays(rays):
+def simulate_rays(rays, mirrors):
     """
     Simulate the reflection of rays off mirrors.
 
@@ -133,7 +151,7 @@ def simulate_rays(rays):
     rays (list): List of turtle objects representing rays.
     """
     for ray in rays:
-        for mirror in MIRRORS:
+        for mirror in mirrors:
             start, end = mirror
             sx, sy = start
             ex, ey = end
@@ -153,8 +171,20 @@ def main():
     Main function to run the ray reflection simulation.
     """
     try:
+
+        args = parse_arguments()
+        initial_conditions = load_initial_conditions(args.initial_conditions)
+
+        # Extracting constants from the loaded initial conditions
+        MIRRORS = initial_conditions['mirrors']
+        RAYS = initial_conditions['rays']
+        ANGLES = range(initial_conditions['angles']['start'],
+                       initial_conditions['angles']['end'],
+                       initial_conditions['angles']['step'])
+        ITERATIONS = initial_conditions['iterations']
+
         screen = setup_screen()
-        draw_mirrors()
+        draw_mirrors(MIRRORS)
 
         rays = []
         for angle in ANGLES:
@@ -164,7 +194,7 @@ def main():
                 rays.append(ray)
 
         for _ in range(ITERATIONS):
-            simulate_rays(rays)
+            simulate_rays(rays, MIRRORS)
             screen.update()
 
         turtle.done()
