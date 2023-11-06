@@ -24,6 +24,8 @@ def parse_arguments():
                                 (default: initial_conditions.json)")
     parser.add_argument("-s", "--save", action="store_true",
                         help="Save the simulation as a png image")
+    parser.add_argument("-o", "--output", type=str,
+                        help="Output file for the saved image")
     return parser.parse_args()
 
 
@@ -176,7 +178,7 @@ def simulate_rays(rays, mirrors):
             ray.forward(1)
 
 
-def save_image(screen):
+def save_image(screen, output=None):
     """
     Save the screen as a png image into images folder.
 
@@ -184,11 +186,14 @@ def save_image(screen):
     screen (turtle.Screen): The turtle screen object.
     """
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    image = screen.getcanvas().postscript()
-    img = Image.open(io.BytesIO(image.encode('utf-8')))
-    if not os.path.exists('images'):
-        os.makedirs('images')
-    img.save(f"images/{timestamp}.png")
+    eps = screen.getcanvas().postscript()
+    img = Image.open(io.BytesIO(eps.encode('utf-8')))
+    if output:
+        img.save(output)
+    else:
+        if not os.path.exists('images'):
+            os.makedirs('images')
+        img.save(f"images/{timestamp}.png")
 
 
 def main():
@@ -223,7 +228,7 @@ def main():
             screen.update()
 
         if args.save:
-            save_image(screen)
+            save_image(screen, args.output)
             print("Image saved successfully.")
 
         turtle.done()
