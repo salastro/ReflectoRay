@@ -1,3 +1,4 @@
+from _tkinter import TclError
 import argparse
 import json
 import math
@@ -203,6 +204,8 @@ def main():
 
     except KeyboardInterrupt:
         print("\nSimulation interrupted by the user. Exiting...")
+    except TclError:
+        print("Simulation interrupted by the user. Exiting...")
 
 
 if __name__ == "__main__":
