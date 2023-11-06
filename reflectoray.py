@@ -6,11 +6,12 @@ MIRRORS = [
     ((100, -100), (100, 100)),
     ((100, 100), (-100, 100)),
 ]
-HEAD_RAY = (0, 0)
-TAIL_RAY = (-50, 50)
+RAYS = [
+    {'start': (0, 0), 'color': 'black'},
+    {'start': (-50, 50), 'color': 'red'},
+]
 ANGLES = range(0, 360, 10)
 ITERATIONS = 100
-EXTENSION_LENGTH = 1000
 
 
 def setup_screen():
@@ -40,7 +41,7 @@ def draw_mirrors():
         turtle.hideturtle()
 
 
-def create_ray(angle, start=HEAD_RAY, color="black"):
+def create_ray(angle, start, color):
     """
     Create a turtle object representing a ray at a given angle.
 
@@ -102,14 +103,14 @@ def reflect_ray(incident_angle, line_start, line_end):
     return reflection_angle
 
 
-def extend_ray(ray, extension_length):
+def extend_ray(ray):
     """
     Extend the ray to simulate the reflection.
 
     Args:
     ray (turtle.Turtle): The turtle object representing the ray.
-    extension_length (int): The length of the extension.
     """
+    extension_length = 1000
     distance = 0
     angle = ray.heading()
     ray.setheading(angle-180)
@@ -140,10 +141,10 @@ def simulate_rays(rays):
             intersection = distance(ray.position(), start, end)
             in_boundary = (sy < ray.ycor() < ey) or (ex < ray.xcor() < sx)
 
-            if intersection <= 1 and in_boundary:
+            if intersection <= 1.5 and in_boundary:
                 reflection_angle = reflect_ray(ray.heading(), start, end)
                 ray.setheading(reflection_angle)
-                extend_ray(ray, EXTENSION_LENGTH)
+                extend_ray(ray)
             ray.forward(1)
 
 
@@ -155,12 +156,15 @@ def main():
         screen = setup_screen()
         draw_mirrors()
 
-        head_rays = [create_ray(angle, HEAD_RAY, 'blue') for angle in ANGLES]
-        tail_rays = [create_ray(angle, TAIL_RAY, 'red') for angle in ANGLES]
+        rays = []
+        for angle in ANGLES:
+            for ray in RAYS:
+                start, color = ray.values()
+                ray = create_ray(angle, start, color)
+                rays.append(ray)
 
         for _ in range(ITERATIONS):
-            simulate_rays(head_rays)
-            simulate_rays(tail_rays)
+            simulate_rays(rays)
             screen.update()
 
         turtle.done()
