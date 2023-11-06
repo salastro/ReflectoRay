@@ -12,8 +12,10 @@ def parse_arguments():
     argparse.Namespace: The namespace object containing the parsed arguments.
     """
     parser = argparse.ArgumentParser(description="Ray Reflection Simulation")
-    parser.add_argument("initial_conditions",
-                        help="Path to the initial conditions file")
+    parser.add_argument("initial_conditions", nargs='?',
+                        default='initial_conditions.json',
+                        help="Path to the initial conditions file \
+                                (default: initial_conditions.json)")
     return parser.parse_args()
 
 
