@@ -1,8 +1,13 @@
 from _tkinter import TclError
 import argparse
+import io
 import json
 import math
+import os
+import time
 import turtle
+
+from PIL import Image
 
 
 def parse_arguments():
@@ -17,6 +22,8 @@ def parse_arguments():
                         default='initial_conditions.json',
                         help="Path to the initial conditions file \
                                 (default: initial_conditions.json)")
+    parser.add_argument("-s", "--save", action="store_true",
+                        help="Save the simulation as a png image")
     return parser.parse_args()
 
 
@@ -169,6 +176,21 @@ def simulate_rays(rays, mirrors):
             ray.forward(1)
 
 
+def save_image(screen):
+    """
+    Save the screen as a png image into images folder.
+
+    Args:
+    screen (turtle.Screen): The turtle screen object.
+    """
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    image = screen.getcanvas().postscript()
+    img = Image.open(io.BytesIO(image.encode('utf-8')))
+    if not os.path.exists('images'):
+        os.makedirs('images')
+    img.save(f"images/{timestamp}.png")
+
+
 def main():
     """
     Main function to run the ray reflection simulation.
@@ -200,7 +222,12 @@ def main():
             simulate_rays(rays, MIRRORS)
             screen.update()
 
+        if args.save:
+            save_image(screen)
+            print("Image saved successfully.")
+
         turtle.done()
+        print("Simulation completed successfully.")
 
     except KeyboardInterrupt:
         print("\nSimulation interrupted by the user. Exiting...")
