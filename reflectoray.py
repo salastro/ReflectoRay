@@ -214,7 +214,9 @@ def simulate_rays(rays, mirrors):
 
 def run_simulation(screen, rays, mirrors, iterations, video, tmp):
     with Progress() as progress:
-        task = progress.add_task("Simulation in progress...", total=iterations)
+        video_string = "[cyan](video recording)[white]" if video else ""
+        task = progress.add_task(f"Simulation in progress {video_string}...",
+                                 total=iterations)
         for i in range(iterations):
             simulate_rays(rays, mirrors)
             screen.update()
