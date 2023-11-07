@@ -198,6 +198,27 @@ def save_image(screen, output):
     img.save(output)
 
 
+def convert_eps_to_png(folder):
+    """
+    Convert the eps images in the input folder to png images.
+
+    Args:
+    folder (str): The path to the input folder.
+    """
+    images_eps = [img for img in os.listdir(
+        folder) if img.endswith(".eps")]
+
+    with Progress() as progress:
+        task = progress.add_task(
+            "Converting images to PNG...", total=len(images_eps))
+        for image_eps in images_eps:
+            img = Image.open(os.path.join(folder, image_eps))
+            img.save(os.path.join(folder,
+                     image_eps.replace('.eps', '.png')))
+            os.remove(os.path.join(folder, image_eps))
+            progress.update(task, advance=1)
+
+
 def save_video(folder, output, fps=60, codec='mp4v'):
     """
     Save the images in the input folder as a video.
@@ -208,27 +229,30 @@ def save_video(folder, output, fps=60, codec='mp4v'):
     fps (int): The number of frames per second.
     codec (str): The codec to use for the video.
     """
-    images = [img for img in os.listdir(folder) if img.endswith(".eps")]
-    # Convert eps images to png
-    with Progress() as progress:
-        task = progress.add_task(
-            "Processing images...", total=len(images))
-        for image in images:
-            img = Image.open(os.path.join(folder, image))
-            img.save(os.path.join(folder, image.replace('.eps', '.png')))
-            os.remove(os.path.join(folder, image))
-            progress.update(task, advance=1)
-    images = [img for img in os.listdir(folder) if img.endswith(".png")]
-    frame = cv2.imread(os.path.join(folder, images[0]))
+    images_eps = [img for img in os.listdir(
+        folder) if img.endswith(".eps")]
+    if not images_eps:
+        print("No EPS images found in the folder. Aborting video creation.")
+        return
+
+    convert_eps_to_png(folder)
+    images_png = [img for img in os.listdir(
+        folder) if img.endswith(".png")]
+    if not images_png:
+        print("No PNG images found after conversion. Aborting video creation.")
+        return
+
+    frame = cv2.imread(os.path.join(folder, images_png[0]))
     height, width, layers = frame.shape
-    video = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*codec), fps,
-                            (width, height))
+    video = cv2.VideoWriter(
+        output, cv2.VideoWriter_fourcc(*codec), fps, (width, height))
+
     with Progress() as progress:
-        task = progress.add_task("Compiling video...",
-                                 total=len(images))
-        for image in images:
-            video.write(cv2.imread(os.path.join(folder, image)))
+        task = progress.add_task("Compiling video...", total=len(images_png))
+        for image_png in images_png:
+            video.write(cv2.imread(os.path.join(folder, image_png)))
             progress.update(task, advance=1)
+
     cv2.destroyAllWindows()
     video.release()
 
