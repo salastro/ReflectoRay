@@ -233,6 +233,17 @@ def save_video(folder, output, fps=60, codec='mp4v'):
     video.release()
 
 
+def save_output(screen, image, video, tmp):
+    if image:
+        save_image(screen, image)
+        print("Image saved successfully.")
+
+    if video:
+        save_video(tmp.name, video)
+        print("Video saved successfully.")
+        tmp.cleanup()
+
+
 def main():
     """
     Main function to run the ray reflection simulation.
@@ -273,14 +284,8 @@ def main():
                     screen.getcanvas().postscript(file=f"{tmp.name}/{i}.eps")
                 progress.update(task, advance=1)
 
-        if args.image:
-            save_image(screen, args.image)
-            print("Image saved successfully.")
-
-        if args.video:
-            save_video(tmp.name, args.video)
-            tmp.cleanup()
-            print("Video saved successfully.")
+        save_output(screen, args.image, args.video,
+                    tmp if args.video else None)
 
         turtle.done()
         print("Simulation completed successfully.")
