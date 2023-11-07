@@ -6,7 +6,6 @@ import math
 import os
 import time
 import turtle
-
 from PIL import Image
 
 
@@ -171,7 +170,7 @@ def simulate_rays(rays, mirrors):
             intersection = distance(ray.position(), start, end)
             in_boundary = (sy < ray.ycor() < ey) or (ex < ray.xcor() < sx)
 
-            if intersection <= 1.1 and in_boundary:
+            if intersection <= 2**0.5 and in_boundary:
                 reflection_angle = reflect_ray(ray.heading(), start, end)
                 ray.setheading(reflection_angle)
                 extend_ray(ray)
