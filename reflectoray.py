@@ -1,12 +1,16 @@
+from PIL import Image
 from _tkinter import TclError
+from rich.progress import Progress
+from tempfile import TemporaryDirectory
+
 import argparse
+import cv2
 import io
 import json
 import math
 import os
 import time
 import turtle
-from PIL import Image
 
 
 def parse_arguments():
@@ -16,15 +20,18 @@ def parse_arguments():
     Returns:
     argparse.Namespace: The namespace object containing the parsed arguments.
     """
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
     parser = argparse.ArgumentParser(description="Ray Reflection Simulation")
     parser.add_argument("initial_conditions", nargs='?',
                         default='initial_conditions.json',
                         help="Path to the initial conditions file \
                                 (default: initial_conditions.json)")
-    parser.add_argument("-s", "--save", action="store_true",
+    parser.add_argument("-i", "--image", type=str,
+                        nargs='?', const=f"{timestamp}.png",
                         help="Save the simulation as a png image")
-    parser.add_argument("-o", "--output", type=str,
-                        help="Output file for the saved image")
+    parser.add_argument("-v", "--video", type=str,
+                        nargs='?', const=f"{timestamp}.mp4",
+                        help="Record the simulation as a video")
     return parser.parse_args()
 
 
@@ -178,22 +185,52 @@ def simulate_rays(rays, mirrors):
             ray.forward(1)
 
 
-def save_image(screen, output=None):
+def save_image(screen, output):
     """
     Save the screen as a png image into images folder.
 
     Args:
     screen (turtle.Screen): The turtle screen object.
+    output (str): The path to the output image file.
     """
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
     eps = screen.getcanvas().postscript()
     img = Image.open(io.BytesIO(eps.encode('utf-8')))
-    if output:
-        img.save(output)
-    else:
-        if not os.path.exists('images'):
-            os.makedirs('images')
-        img.save(f"images/{timestamp}.png")
+    img.save(output)
+
+
+def save_video(folder, output, fps=60, codec='mp4v'):
+    """
+    Save the images in the input folder as a video.
+
+    Args:
+    input_folder (str): The path to the input folder.
+    output_file (str): The path to the output video file.
+    fps (int): The number of frames per second.
+    codec (str): The codec to use for the video.
+    """
+    images = [img for img in os.listdir(folder) if img.endswith(".eps")]
+    # Convert eps images to png
+    with Progress() as progress:
+        task = progress.add_task(
+            "Processing images...", total=len(images))
+        for image in images:
+            img = Image.open(os.path.join(folder, image))
+            img.save(os.path.join(folder, image.replace('.eps', '.png')))
+            os.remove(os.path.join(folder, image))
+            progress.update(task, advance=1)
+    images = [img for img in os.listdir(folder) if img.endswith(".png")]
+    frame = cv2.imread(os.path.join(folder, images[0]))
+    height, width, layers = frame.shape
+    video = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*codec), fps,
+                            (width, height))
+    with Progress() as progress:
+        task = progress.add_task("Compiling video...",
+                                 total=len(images))
+        for image in images:
+            video.write(cv2.imread(os.path.join(folder, image)))
+            progress.update(task, advance=1)
+    cv2.destroyAllWindows()
+    video.release()
 
 
 def main():
@@ -223,13 +260,27 @@ def main():
                 ray = create_ray(angle, start, color)
                 rays.append(ray)
 
-        for _ in range(ITERATIONS):
-            simulate_rays(rays, MIRRORS)
-            screen.update()
+        if args.video:
+            tmp = TemporaryDirectory()
 
-        if args.save:
-            save_image(screen, args.output)
+        with Progress() as progress:
+            task = progress.add_task(
+                "Simulation in progress...", total=ITERATIONS)
+            for i in range(ITERATIONS):
+                simulate_rays(rays, MIRRORS)
+                screen.update()
+                if args.video:
+                    screen.getcanvas().postscript(file=f"{tmp.name}/{i}.eps")
+                progress.update(task, advance=1)
+
+        if args.image:
+            save_image(screen, args.image)
             print("Image saved successfully.")
+
+        if args.video:
+            save_video(tmp.name, args.video)
+            tmp.cleanup()
+            print("Video saved successfully.")
 
         turtle.done()
         print("Simulation completed successfully.")
