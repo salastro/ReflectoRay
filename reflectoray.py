@@ -234,14 +234,51 @@ def save_video(folder, output, fps=60, codec='mp4v'):
 
 
 def save_output(screen, image, video, tmp):
-    if image:
-        save_image(screen, image)
-        print("Image saved successfully.")
-
     if video:
         save_video(tmp.name, video)
         print("Video saved successfully.")
         tmp.cleanup()
+    if image:
+        save_image(screen, image)
+        print("Image saved successfully.")
+
+
+def create_rays_from_sources(angles, sources):
+    """
+    Create rays from the sources.
+
+    Args:
+    angles (list): List of angles to create the rays at.
+    sources (list): List of source coordinates.
+
+    Returns:
+    list: List of turtle objects representing rays.
+    """
+    rays = []
+    for angle in angles:
+        for source in sources:
+            start, color = source.values()
+            ray = create_ray(angle, start, color)
+            rays.append(ray)
+    return rays
+
+
+def setup_simulation(mirrors, sources, angles):
+    screen = setup_screen()
+    draw_mirrors(mirrors)
+    rays = create_rays_from_sources(angles, sources)
+    return screen, rays
+
+
+def run_simulation(screen, rays, mirrors, iterations, video, tmp):
+    with Progress() as progress:
+        task = progress.add_task("Simulation in progress...", total=iterations)
+        for i in range(iterations):
+            simulate_rays(rays, mirrors)
+            screen.update()
+            if video:
+                screen.getcanvas().postscript(file=f"{tmp.name}/{i}.eps")
+            progress.update(task, advance=1)
 
 
 def main():
@@ -261,31 +298,13 @@ def main():
                        initial_conditions['angles']['step'])
         ITERATIONS = initial_conditions['iterations']
 
-        screen = setup_screen()
-        draw_mirrors(MIRRORS)
+        screen, rays = setup_simulation(MIRRORS, SOURCES, ANGLES)
 
-        rays = []
-        for angle in ANGLES:
-            for source in SOURCES:
-                start, color = source.values()
-                ray = create_ray(angle, start, color)
-                rays.append(ray)
+        tmp = TemporaryDirectory() if args.video else None
 
-        if args.video:
-            tmp = TemporaryDirectory()
+        run_simulation(screen, rays, MIRRORS, ITERATIONS, args.video, tmp)
 
-        with Progress() as progress:
-            task = progress.add_task(
-                "Simulation in progress...", total=ITERATIONS)
-            for i in range(ITERATIONS):
-                simulate_rays(rays, MIRRORS)
-                screen.update()
-                if args.video:
-                    screen.getcanvas().postscript(file=f"{tmp.name}/{i}.eps")
-                progress.update(task, advance=1)
-
-        save_output(screen, args.image, args.video,
-                    tmp if args.video else None)
+        save_output(screen, args.image, args.video, tmp)
 
         turtle.done()
         print("Simulation completed successfully.")
