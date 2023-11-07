@@ -244,7 +244,7 @@ def main():
 
         # Extracting constants from the loaded initial conditions
         MIRRORS = initial_conditions['mirrors']
-        RAYS = initial_conditions['rays']
+        SOURCES = initial_conditions['sources']
         ANGLES = range(initial_conditions['angles']['start'],
                        initial_conditions['angles']['end'],
                        initial_conditions['angles']['step'])
@@ -255,8 +255,8 @@ def main():
 
         rays = []
         for angle in ANGLES:
-            for ray in RAYS:
-                start, color = ray.values()
+            for source in SOURCES:
+                start, color = source.values()
                 ray = create_ray(angle, start, color)
                 rays.append(ray)
 
