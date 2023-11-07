@@ -99,6 +99,26 @@ def create_ray(angle, start, color):
     return ray
 
 
+def create_rays_from_sources(angles, sources):
+    """
+    Create rays from the sources.
+
+    Args:
+    angles (list): List of angles to create the rays at.
+    sources (list): List of source coordinates.
+
+    Returns:
+    list: List of turtle objects representing rays.
+    """
+    rays = []
+    for angle in angles:
+        for source in sources:
+            start, color = source.values()
+            ray = create_ray(angle, start, color)
+            rays.append(ray)
+    return rays
+
+
 def distance(point, line_start, line_end):
     """
     Calculate the distance between a point and a line defined by two points.
@@ -161,6 +181,13 @@ def extend_ray(ray):
     ray.pendown()
 
 
+def setup_simulation(mirrors, sources, angles):
+    screen = setup_screen()
+    draw_mirrors(mirrors)
+    rays = create_rays_from_sources(angles, sources)
+    return screen, rays
+
+
 def simulate_rays(rays, mirrors):
     """
     Simulate the reflection of rays off mirrors.
@@ -183,6 +210,17 @@ def simulate_rays(rays, mirrors):
                 ray.setheading(reflection_angle)
                 extend_ray(ray)
             ray.forward(1)
+
+
+def run_simulation(screen, rays, mirrors, iterations, video, tmp):
+    with Progress() as progress:
+        task = progress.add_task("Simulation in progress...", total=iterations)
+        for i in range(iterations):
+            simulate_rays(rays, mirrors)
+            screen.update()
+            if video:
+                screen.getcanvas().postscript(file=f"{tmp.name}/{i}.eps")
+            progress.update(task, advance=1)
 
 
 def save_image(screen, output):
@@ -274,44 +312,6 @@ def save_output(screen, image, video, tmp):
     if image:
         save_image(screen, image)
         print("Image saved successfully.")
-
-
-def create_rays_from_sources(angles, sources):
-    """
-    Create rays from the sources.
-
-    Args:
-    angles (list): List of angles to create the rays at.
-    sources (list): List of source coordinates.
-
-    Returns:
-    list: List of turtle objects representing rays.
-    """
-    rays = []
-    for angle in angles:
-        for source in sources:
-            start, color = source.values()
-            ray = create_ray(angle, start, color)
-            rays.append(ray)
-    return rays
-
-
-def setup_simulation(mirrors, sources, angles):
-    screen = setup_screen()
-    draw_mirrors(mirrors)
-    rays = create_rays_from_sources(angles, sources)
-    return screen, rays
-
-
-def run_simulation(screen, rays, mirrors, iterations, video, tmp):
-    with Progress() as progress:
-        task = progress.add_task("Simulation in progress...", total=iterations)
-        for i in range(iterations):
-            simulate_rays(rays, mirrors)
-            screen.update()
-            if video:
-                screen.getcanvas().postscript(file=f"{tmp.name}/{i}.eps")
-            progress.update(task, advance=1)
 
 
 def main():
