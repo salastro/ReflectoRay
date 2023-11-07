@@ -161,6 +161,7 @@ def simulate_rays(rays, mirrors):
     Args:
     rays (list): List of turtle objects representing rays.
     """
+    margin = 2**0.5
     for ray in rays:
         for mirror in mirrors:
             start, end = mirror
@@ -170,7 +171,7 @@ def simulate_rays(rays, mirrors):
             intersection = distance(ray.position(), start, end)
             in_boundary = (sy < ray.ycor() < ey) or (ex < ray.xcor() < sx)
 
-            if intersection <= 2**0.5 and in_boundary:
+            if intersection <= margin and in_boundary:
                 reflection_angle = reflect_ray(ray.heading(), start, end)
                 ray.setheading(reflection_angle)
                 extend_ray(ray)
