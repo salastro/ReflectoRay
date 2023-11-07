@@ -258,6 +258,15 @@ def save_video(folder, output, fps=60, codec='mp4v'):
 
 
 def save_output(screen, image, video, tmp):
+    """
+    Save the output as an image or video.
+
+    Args:
+    screen (turtle.Screen): The turtle screen object.
+    image (str): The path to the output image file.
+    video (str): The path to the output video file.
+    tmp (tempfile.NamedTemporaryFile): The temporary file object.
+    """
     if video:
         save_video(tmp.name, video)
         print("Video saved successfully.")
