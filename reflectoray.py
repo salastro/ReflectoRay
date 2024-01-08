@@ -269,12 +269,6 @@ def save_video(folder, output, fps=60, codec='mp4v'):
     fps (int): The number of frames per second.
     codec (str): The codec to use for the video.
     """
-    images_eps = [img for img in os.listdir(
-        folder) if img.endswith(".eps")]
-    if not images_eps:
-        print("No EPS images found in the folder. Aborting video creation.")
-        return
-
     convert_eps_to_png(folder)
     images_png = [img for img in os.listdir(
         folder) if img.endswith(".png")]
